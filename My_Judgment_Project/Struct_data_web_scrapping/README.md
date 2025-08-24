@@ -1,7 +1,7 @@
 
 # ⚖️ Automated Data Pipeline for Indian Legal Judgments
 
-### An internship project demonstrating an end-to-end workflow for acquiring, processing, and analyzing unstructured legal documents.
+### Demonstrating an end-to-end workflow for acquiring, processing, and analyzing unstructured legal documents.
 
 ---
 
