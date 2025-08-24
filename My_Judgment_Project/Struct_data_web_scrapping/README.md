@@ -44,8 +44,6 @@ A key part of this project was overcoming real-world technical challenges.
     * **Problem:** The raw extracted data was imperfect, containing many missing values and inconsistent formatting, as shown below. This is a true representation of real-world data.
     * **Solution:** I implemented a robust **data cleaning process** using `pandas` to standardize the data, handle missing values, and convert columns to their correct data types, making it suitable for analysis.
 
-![Screenshot of the raw, messy dataset](image_4ace17.png)
-_A snapshot of the initial raw dataset, highlighting the need for cleaning._
 
 ---
 
@@ -59,7 +57,7 @@ We can now easily visualize the distribution of judgments across different court
 
 ### Judgments Over Time
 The cleaned date information allows us to track the volume of judgments over the years.
-![Line chart showing judgments per year](EDA_visuals/judgments_over_time.png)
+
 
 ---
 
