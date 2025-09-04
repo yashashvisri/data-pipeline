@@ -1,5 +1,5 @@
 
-# ⚖️ Automated Data Pipeline for Indian Legal Judgments
+# Automated Data Pipeline for Indian Legal Judgments
 
 ### Demonstrating an end-to-end workflow for acquiring, processing, and analyzing unstructured legal documents.
 
@@ -50,10 +50,6 @@ A key part of this project was overcoming real-world technical challenges.
 ## 📊 **Results: From Raw Text to Actionable Insights**
 
 After cleaning, the final dataset was used to generate meaningful insights. This demonstrates the value of transforming unstructured data into a structured format.
-
-### Court Distribution
-We can now easily visualize the distribution of judgments across different courts in our dataset.
-![Bar chart showing court distribution](EDA_visuals/court_distribution.png)
 
 ### Judgments Over Time
 The cleaned date information allows us to track the volume of judgments over the years.
