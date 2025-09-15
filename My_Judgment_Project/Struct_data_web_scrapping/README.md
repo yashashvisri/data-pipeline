@@ -1,5 +1,5 @@
 
-# ⚖️ Automated Data Pipeline for Indian Legal Judgments
+# Automated Data Pipeline for Indian Legal Judgments
 
 ### Demonstrating an end-to-end workflow for acquiring, processing, and analyzing unstructured legal documents.
 
@@ -51,10 +51,6 @@ A key part of this project was overcoming real-world technical challenges.
 
 After cleaning, the final dataset was used to generate meaningful insights. This demonstrates the value of transforming unstructured data into a structured format.
 
-### Court Distribution
-We can now easily visualize the distribution of judgments across different courts in our dataset.
-![Bar chart showing court distribution](EDA_visuals/court_distribution.png)
-
 ### Judgments Over Time
 The cleaned date information allows us to track the volume of judgments over the years.
 
@@ -65,6 +61,5 @@ The cleaned date information allows us to track the volume of judgments over the
 
 This foundational pipeline and dataset open the door for powerful Machine Learning applications:
 
-* **Topic Modeling:** Use unsupervised learning (`LDA`, `Gensim`) on the `facts` and `ratio` columns to automatically categorize judgments by legal topic (e.g., criminal, civil, corporate).
 * **Semantic Search Engine:** Index this structured data into **Elasticsearch** to build an intelligent search engine that understands legal concepts beyond simple keywords.
 * **Automated Summarization:** Fine-tune a pre-trained language model (from **Hugging Face Transformers**) to generate concise summaries of long judgments.
