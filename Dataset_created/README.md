@@ -1,4 +1,4 @@
-# Indian Kanoon Scraper & Synthetic Data Generator
+# Indian Kanoon Scraper(Using Crawling) & Synthetic Data Generator
 
 ## Project Overview
 
