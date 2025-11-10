@@ -28,7 +28,7 @@ The second stage works entirely offline, using the PDFs you downloaded in Stage 
 
 -   A separate parser script reads and processes each PDF from your local folder.
 -   It uses the **PyMuPDF** library to extract the full, raw text from inside each document.
--   The script then applies an **intelligent, section-based parsing** logic. It searches the text for common legal headings (like "Facts of the case," "Issues," and "Conclusion") to identify and separate the key parts of the judgment.
+-   The script then applies an **intelligent, section-based parsing** logic. It searches the text for common legal headings (like "Facts of the case," "Issues,"        and "Conclusion") to identify and separate the key parts of the judgment.
 -   This method is highly effective at structuring the unstructured text of the legal document.
 -   The final, structured data is then saved into clean, easy-to-use **JSON** files.
 
