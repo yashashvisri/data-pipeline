@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Scraper UI</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 2. Set default font and a simple transition */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-content {
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+        .tab-button.active {
+            border-color: #3b82f6; /* blue-500 */
+            color: #3b82f6;
+            background-color: #eff6ff; /* blue-50 */
+        }
+        .log-box {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1f2937; /* gray-800 */
+            color: #d1d5db; /* gray-300 */
+            border-radius: 8px;
+            padding: 16px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #4b5563; /* gray-600 */
+            font-size: 0.875rem;
+        }
+        .log-box p {
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+        .log-box .log-success { color: #22c55e; } /* green-500 */
+        .log-box .log-error { color: #ef4444; } /* red-500 */
+        .log-box .log-warn { color: #eab308; } /* yellow-500 */
+        .log-box .log-info { color: #3b82f6; } /* blue-500 */
+
+        /* Disable buttons when loading */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* Spinner */
+        .spinner {
+            border: 2px solid rgba(0,0,0,0.1);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden">
+        <header class="p-6 bg-gray-900 text-white">
+            <h1 class="text-3xl font-bold">⚖️ Indian Kanoon - Scraper & Parser</h1>
+            <p class="text-gray-300 mt-1">Full-Stack Application</p>
+        </header>
+
+        <!-- Informational Box -->
+        <div class="m-4 p-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
+            <h3 class="font-bold">How this works:</h3>
+            <p class="text-sm">This HTML frontend (running in your browser) is connected to a Python/Flask backend (running on your server).</p>
+            <p class="text-sm mt-1">When you click a "Start" button, this page will send an API request to the Flask server, which will then run the actual Selenium and PyMuPDF code.</p>
+            <p class="text-sm mt-1 font-semibold text-red-700">IMPORTANT: The crawling process (Stage 1) can take several minutes. Do not close this browser tab while it is running.</p>
+        </div>
+
+        <!-- Tab Navigation -->
+        <nav class="flex border-b border-gray-200 px-4">
+            <button class="tab-button active text-sm md:text-base font-medium py-4 px-3 md:px-6 text-gray-600 border-b-2 border-transparent hover:text-blue-600" data-tab="tab-crawl">
+                1. Crawl & Download
+            </button>
+            <button class="tab-button text-sm md:text-base font-medium py-4 px-3 md:px-6 text-gray-600 border-b-2 border-transparent hover:text-blue-600" data-tab="tab-meta">
+                2. Parse Metadata (Basic)
+            </button>
+            <button class="tab-button text-sm md:text-base font-medium py-4 px-3 md:px-6 text-gray-600 border-b-2 border-transparent hover:text-blue-600" data-tab="tab-section">
+                3. Parse Sections (Advanced)
+            </button>
+        </nav>
+
+        <main class="p-6">
+            <!-- 3. Tab 1: Crawl & Download -->
+            <div id="tab-crawl" class="tab-content active">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Stage 1: Crawl & Download PDFs</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Form -->
+                    <form id="crawl-form" class="space-y-4">
+                        <div>
+                            <label for="search-url" class="block text-sm font-medium text-gray-700">Indian Kanoon Search URL</label>
+                            <input type="url" id="search-url" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="https://indiankanoon.org/search/...">
+                        </div>
+                        <div>
+                            <label for="max-pages" class="block text-sm font-medium text-gray-700">Number of Pages to Scrape</label>
+                            <input type="number" id="max-pages" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="5" min="1" max="50">
+                        </div>
+                        <button type="submit" id="start-crawl-btn" class="w-full inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <span class="btn-text">Start Crawling</span>
+                            <span class="spinner" style="display: none;"></span>
+                        </button>
+                    </form>
+                    <!-- Log -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Crawl Log</label>
+                        <div id="crawl-log" class="log-box">
+                            <p>Waiting for crawl to start...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Tab 2: Parse Metadata (Basic) -->
+            <div id="tab-meta" class="tab-content">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Stage 2: Parse Basic Metadata</h2>
+                <p class="text-gray-600 mb-4">Scans downloaded PDFs to extract metadata (petitioner, respondent, dates, etc.) and saves to a database and Excel file.</p>
+                <button type="button" id="start-meta-btn" class="mb-4 inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <span class="btn-text">Start Basic Parsing</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Metadata Parse Log</label>
+                <div id="meta-log" class="log-box">
+                    <p>Waiting for basic parsing to start...</p>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2">Parsed Data Preview</h3>
+                <div id="meta-preview" class="w-full overflow-x-auto bg-gray-50 p-4 rounded-lg border">
+                    <p class="text-gray-500 italic text-center">Data table will appear here after parsing is complete.</p>
+                </div>
+            </div>
+
+            <!-- 5. Tab 3: Parse Sections (Advanced) -->
+            <div id="tab-section" class="tab-content">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Stage 3: Parse Sections (Advanced)</h2>
+                <p class="text-gray-600 mb-4">Performs a deep scan of PDFs to extract document sections (facts, arguments, analysis, etc.) and saves to a detailed JSON file.</p>
+                <button type="button" id="start-section-btn" class="mb-4 inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    <span class="btn-text">Start Advanced Parsing</span>
+                    <span class="spinner" style="display: none;"></span>
+                </button>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Advanced Parse Log</label>
+                <div id="section-log" class="log-box">
+                    <p>Waiting for advanced parsing to start...</p>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mt-6 mb-2">Processing Summary</h3>
+                <div id="section-summary" class="w-full bg-gray-50 p-4 rounded-lg border">
+                    <p class="text-gray-500 italic text-center">Summary statistics will appear here after parsing is complete.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 6. JavaScript for Tabs and REAL API Calls
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // --- Tab Switching Logic ---
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+
+            // --- API Call Logic ---
+            const crawlLog = document.getElementById('crawl-log');
+            const metaLog = document.getElementById('meta-log');
+            const sectionLog = document.getElementById('section-log');
+
+            const crawlForm = document.getElementById('crawl-form');
+            const crawlBtn = document.getElementById('start-crawl-btn');
+            const metaBtn = document.getElementById('start-meta-btn');
+            const sectionBtn = document.getElementById('start-section-btn');
+
+            // --- Helper to add log messages ---
+            function logMessage(logEl, message, type = 'info') {
+                const p = document.createElement('p');
+                p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                p.className = `log-${type}`;
+                logEl.appendChild(p);
+                logEl.scrollTop = logEl.scrollHeight; // Auto-scroll
+            }
+            
+            function clearLog(logEl) {
+                logEl.innerHTML = '';
+            }
+
+            // --- Toggle Button Loading State ---
+            function toggleLoading(button, isLoading) {
+                const btnText = button.querySelector('.btn-text');
+                const spinner = button.querySelector('.spinner');
+                
+                if (isLoading) {
+                    button.disabled = true;
+                    btnText.style.display = 'none';
+                    spinner.style.display = 'inline-block';
+                } else {
+                    button.disabled = false;
+                    btnText.style.display = 'inline-block';
+                    spinner.style.display = 'none';
+                }
+            }
+
+            // --- Event Listener for Crawl Button ---
+            crawlForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                toggleLoading(crawlBtn, true);
+                clearLog(crawlLog);
+
+                const url = document.getElementById('search-url').value;
+                const pages = document.getElementById('max-pages').value;
+
+                if (!url) {
+                    logMessage(crawlLog, 'Error: Please enter a Search URL.', 'error');
+                    toggleLoading(crawlBtn, false);
+                    return;
+                }
+
+                logMessage(crawlLog, `Starting crawl for "${url}", ${pages} pages...`, 'info');
+                logMessage(crawlLog, 'This may take several minutes. Please wait...', 'warn');
+
+                try {
+                    const response = await fetch('/api/crawl', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url, pages })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.log) {
+                        result.log.forEach(line => logMessage(crawlLog, line));
+                    }
+
+                    if (response.ok && result.status === 'success') {
+                        logMessage(crawlLog, `SUCCESS: ${result.message}`, 'success');
+                    } else {
+                        logMessage(crawlLog, `ERROR: ${result.message}`, 'error');
+                    }
+                } catch (err) {
+                    logMessage(crawlLog, `FATAL ERROR: Could not connect to server. Is it running? ${err}`, 'error');
+                } finally {
+                    toggleLoading(crawlBtn, false);
+                }
+            });
+
+            // --- Event Listener for Metadata Parse Button ---
+            metaBtn.addEventListener('click', async () => {
+                toggleLoading(metaBtn, true);
+                clearLog(metaLog);
+                logMessage(metaLog, 'Starting basic metadata parsing...', 'info');
+
+                try {
+                    const response = await fetch('/api/parse-meta', { method: 'POST' });
+                    const result = await response.json();
+
+                    if (result.log) {
+                        result.log.forEach(line => logMessage(metaLog, line));
+                    }
+
+                    if (response.ok && result.status === 'success') {
+                        logMessage(metaLog, `SUCCESS: ${result.message}`, 'success');
+                        // Display data preview
+                        displayMetaTable(result.data);
+                    } else {
+                        logMessage(metaLog, `ERROR: ${result.message}`, 'error');
+                    }
+                } catch (err) {
+                    logMessage(metaLog, `FATAL ERROR: Could not connect to server. ${err}`, 'error');
+                } finally {
+                    toggleLoading(metaBtn, false);
+                }
+            });
+
+            // --- Event Listener for Section Parse Button ---
+            sectionBtn.addEventListener('click', async () => {
+                toggleLoading(sectionBtn, true);
+                clearLog(sectionLog);
+                logMessage(sectionLog, 'Starting advanced section parsing...', 'info');
+
+                try {
+                    const response = await fetch('/api/parse-sections', { method: 'POST' });
+                    const result = await response.json();
+
+                    if (result.log) {
+                        result.log.forEach(line => logMessage(sectionLog, line));
+                    }
+
+                    if (response.ok && result.status === 'success') {
+                        logMessage(sectionLog, `SUCCESS: ${result.message}`, 'success');
+                        // Display summary
+                        displaySectionSummary(result.summary);
+                    } else {
+                        logMessage(sectionLog, `ERROR: ${result.message}`, 'error');
+                    }
+                } catch (err) {
+                    logMessage(sectionLog, `FATAL ERROR: Could not connect to server. ${err}`, 'error');
+                } finally {
+                    toggleLoading(sectionBtn, false);
+                }
+            });
+
+            // --- Helper to display data ---
+            function displayMetaTable(data) {
+                const previewEl = document.getElementById('meta-preview');
+                if (!data || data.length === 0) {
+                    previewEl.innerHTML = '<p class="text-gray-500 italic text-center">No data returned.</p>';
+                    return;
+                }
+                
+                const headers = Object.keys(data[0]);
+                let table = '<table class="min-w-full divide-y divide-gray-200">';
+                table += '<thead class="bg-gray-100"><tr>';
+                headers.forEach(h => table += `<th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${h}</th>`);
+                table += '</tr></thead>';
+                table += '<tbody class="bg-white divide-y divide-gray-200">';
+                data.slice(0, 10).forEach(row => { // Show first 10 rows
+                    table += '<tr>';
+                    headers.forEach(h => table += `<td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700">${row[h]}</td>`);
+                    table += '</tr>';
+                });
+                table += '</tbody></table>';
+                previewEl.innerHTML = table;
+            }
+
+            function displaySectionSummary(summary) {
+                const summaryEl = document.getElementById('section-summary');
+                if (!summary) {
+                    summaryEl.innerHTML = '<p class="text-gray-500 italic text-center">No summary returned.</p>';
+                    return;
+                }
+                
+                summaryEl.innerHTML = `
+                    <div class="flex justify-around">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">Total Processed</p>
+                            <p class="text-2xl font-bold text-gray-900">${summary.total_processed}</p>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-sm text-gray-500">Case Types</p>
+                            <pre class="text-xs bg-gray-200 p-2 rounded">${JSON.stringify(summary.case_types, null, 2)}</pre>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-sm text-gray-500">Outcomes</p>
+                            <pre class="text-xs bg-gray-200 p-2 rounded">${JSON.stringify(summary.outcomes, null, 2)}</pre>
+                        </div>
+                    </div>
+                `;
+            }
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+Flask
+selenium
+pandas
+PyMuPDF
+openpyxl
+webdriver-manager
